@@ -1,0 +1,28 @@
+spring:
+  mvc:
+    static-path-pattern: /static/**
+
+  data:
+    solr:
+      host: http://10.20.10.27:8983/solr
+      core: printerDemo
+      keepDays: 5
+
+  datasource:
+    url: jdbc:mysql://10.20.10.27:3306/printerFulltext
+    username: root
+    password: hzhu123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  thymeleaf:
+    prefix: classpath:/templates/
+    cache: false
+
+  async:
+    corePoolSize: 10
+    maxPoolSize: 200
+    queueCapacity: 10
+
+  scheduler:
+    cleanOldDocument:
+      cron: "0 0 3 * * *"
