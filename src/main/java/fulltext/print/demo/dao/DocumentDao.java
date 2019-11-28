@@ -15,7 +15,7 @@ public interface DocumentDao {
     @Select("SELECT * FROM printerData")
     List<Document> findAll();
 
-    @Insert("INSERT INTO printerData(id, title, author, printTime, url) values(#{id}, #{title}, #{author}, #{printTime}, #{url})")
+    @Insert("INSERT INTO printerData(id, title, author, printTime, url, content) values(#{id}, #{title}, #{author}, #{printTime}, #{url}, #{content})")
     void insertOneDocument(Document document);
 
     @Delete("DELETE FROM printerData WHERE printTime <= #{date}")

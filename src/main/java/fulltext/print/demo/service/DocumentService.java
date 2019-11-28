@@ -4,6 +4,7 @@ import fulltext.print.demo.bean.Document;
 import fulltext.print.demo.bean.SearchResult;
 import fulltext.print.demo.dao.DocumentDao;
 import fulltext.print.demo.dao.SolrDao;
+import lombok.extern.log4j.Log4j2;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+@Log4j2
 @Service
 public class DocumentService {
 
@@ -36,6 +38,7 @@ public class DocumentService {
 
     public SearchResult search(String queryString, int page, int row)  throws Exception {
 
+        log.info("Start searching " + queryString + " page: " + page + " row: " + row);
         SearchResult searchResult = new SearchResult();
         SolrQuery solrQuery = new SolrQuery();
 
@@ -100,6 +103,8 @@ public class DocumentService {
 
         searchResult.setPageCount(pageCount);
 
+        log.info("Search finished");
+
         return searchResult;
     }
 
@@ -115,10 +120,13 @@ public class DocumentService {
     public void insertDocument(Document document) {
         documentDao.insertOneDocument(document);
         solrDao.save(document);
+        System.out.println(Thread.currentThread().getName() + ": Insert succeed for document " + document.getUrl());
+        //log.info(Thread.currentThread().getName() + ": Insert succeed for document " + document.getUrl());
     }
 
     @Transactional
     public void deleteOldDocuments() {
+        log.info("Start deleting old documents");
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
         calendar.add(Calendar.DATE, -keepDays);
@@ -126,6 +134,7 @@ public class DocumentService {
 
         deleteOldDocumentOfSolr(deleteTime);
         deleteOldDocumentsOfSQL(deleteTime);
+        log.info("Delete succeed!");
     }
 
     public void deleteOldDocumentsOfSQL(Date date) {
@@ -135,4 +144,6 @@ public class DocumentService {
     public void deleteOldDocumentOfSolr(Date date) {
         solrDao.deleteDocumentByPrintTimeBefore(date);
     }
+
+
 }

@@ -9,7 +9,7 @@ spring:
       keepDays: 5
 
   datasource:
-    url: jdbc:mysql://10.20.10.27:3306/printerFulltext
+    url: jdbc:mysql://10.20.10.27:3306/printerFulltext?characterEncoding=utf-8
     username: root
     password: hzhu123
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -19,7 +19,7 @@ spring:
     cache: false
 
   async:
-    corePoolSize: 10
+    corePoolSize: 20
     maxPoolSize: 200
     queueCapacity: 10
 
