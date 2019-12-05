@@ -2,6 +2,7 @@ package fulltext.print.demo;
 
 import fulltext.print.demo.bean.Document;
 import fulltext.print.demo.dao.SolrDao;
+import fulltext.print.demo.dao.SolrDaoUsingSolrTemplate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +18,9 @@ public class DocumentSolrDaoTest {
 
     @Autowired
     private SolrDao solrDao;
+
+    @Autowired
+    private SolrDaoUsingSolrTemplate solrDaoUsingSolrTemplate;
 
     @Test
     public void insertSolrTest() {
@@ -44,6 +48,23 @@ public class DocumentSolrDaoTest {
     @Test
     public void deleteDocumentByPrintTimeBeforeTest() {
         solrDao.deleteDocumentByPrintTimeBefore(new Date());
+    }
+
+    @Test
+    public void addDocumentWithOutCommitTest() {
+        Document document = new Document();
+        document.setId(String.valueOf(1));
+        document.setAuthor("happy coding");
+        document.setTitle("beautiful code");
+        document.setContent("hello world!!");
+        document.setPrintTime(new Date());
+        document.setUrl("/data");
+        solrDaoUsingSolrTemplate.addDocumentWithOutCommit(document);
+    }
+
+    @Test
+    public void commitTest() {
+        solrDaoUsingSolrTemplate.commit();
     }
 
 }

@@ -4,6 +4,7 @@ import fulltext.print.demo.bean.Document;
 import fulltext.print.demo.bean.SearchResult;
 import fulltext.print.demo.dao.DocumentDao;
 import fulltext.print.demo.dao.SolrDao;
+import fulltext.print.demo.dao.SolrDaoUsingSolrTemplate;
 import lombok.extern.log4j.Log4j2;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -23,9 +24,10 @@ public class DocumentService {
 
     @Autowired
     private SolrClient solrClient;
-
     @Autowired
     private SolrDao solrDao;
+    @Autowired
+    private SolrDaoUsingSolrTemplate solrDaoUsingSolrTemplate;
 
     @Autowired
     private DocumentDao documentDao;
@@ -119,7 +121,7 @@ public class DocumentService {
     @Transactional
     public void insertDocument(Document document) {
         documentDao.insertOneDocument(document);
-        solrDao.save(document);
+        solrDaoUsingSolrTemplate.addDocumentWithOutCommit(document);
         System.out.println(Thread.currentThread().getName() + ": Insert succeed for document " + document.getUrl());
         //log.info(Thread.currentThread().getName() + ": Insert succeed for document " + document.getUrl());
     }
@@ -143,6 +145,10 @@ public class DocumentService {
 
     public void deleteOldDocumentOfSolr(Date date) {
         solrDao.deleteDocumentByPrintTimeBefore(date);
+    }
+
+    public void commitToSolr() {
+        solrDaoUsingSolrTemplate.commit();
     }
 
 
