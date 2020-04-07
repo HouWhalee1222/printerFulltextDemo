@@ -18,7 +18,7 @@ public class GeneralController {
 
     @RequestMapping("/uploadAndIndexingFiles")
     public ModelAndView uploadAndIndexingFilesExecute() throws IOException {
-        String filesPath = "/data/THUCNewsData/THUCNews";
+        String filesPath = "E:\\printerData";
         uploadAndIndexingFiles.insertDocument(filesPath);
         return new ModelAndView("redirect:/util/uploadAndIndexingFiles/status");
     }
