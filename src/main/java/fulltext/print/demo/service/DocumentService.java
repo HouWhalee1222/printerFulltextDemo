@@ -2,6 +2,7 @@ package fulltext.print.demo.service;
 
 import fulltext.print.demo.bean.Document;
 import fulltext.print.demo.bean.SearchResult;
+import fulltext.print.demo.component.OCR;
 import fulltext.print.demo.dao.DocumentDao;
 import fulltext.print.demo.dao.SolrDao;
 import fulltext.print.demo.dao.SolrDaoUsingSolrTemplate;
@@ -16,7 +17,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.io.*;
 import java.util.*;
+import java.util.List;
 
 @Log4j2
 @Service
@@ -31,6 +36,9 @@ public class DocumentService {
 
     @Autowired
     private DocumentDao documentDao;
+
+    @Autowired
+    private OCR ocr;
 
     @Value("${spring.data.solr.core}")
     private String collection;
@@ -124,6 +132,7 @@ public class DocumentService {
         solrDaoUsingSolrTemplate.addDocumentWithOutCommit(document);
         System.out.println(Thread.currentThread().getName() + ": Insert succeed for document " + document.getUrl());
         //log.info(Thread.currentThread().getName() + ": Insert succeed for document " + document.getUrl());
+        //
     }
 
     @Transactional
@@ -137,6 +146,57 @@ public class DocumentService {
         deleteOldDocumentOfSolr(deleteTime);
         deleteOldDocumentsOfSQL(deleteTime);
         log.info("Delete succeed!");
+    }
+
+    @Transactional
+    public void deleteAll() {
+        log.info("Start deleting all documents");
+        Date deleteTime = new Date();
+        deleteOldDocumentsOfSQL(deleteTime);
+        deleteOldDocumentOfSolr(deleteTime);
+        log.info("Delete succeed!");
+    }
+
+    public boolean insertFile(File file) throws IOException {
+        String content = "";
+        if (isImage(file)) {
+            content = ocr.doOCRForOneFile(file);
+        } else {
+            File filename = new File(String.valueOf(file));
+            InputStreamReader reader = new InputStreamReader(new FileInputStream(filename));
+            BufferedReader br = new BufferedReader(reader);
+
+            String line = br.readLine();
+            while (line != null) {
+                content = content + line;
+                line = br.readLine();
+            }
+            br.close();
+        }
+
+        Document document = new Document();
+        document.setId(UUID.randomUUID().toString());
+        document.setAuthor("作者");
+        document.setTitle(file.getName());
+        document.setContent(content);
+        document.setPrintTime(new Date());
+        document.setUrl(file.getPath());
+        insertDocument(document);
+        return true;
+    }
+
+    public boolean insertFile(String filePath) throws IOException {
+        File file = new File(filePath);
+        return insertFile(file);
+    }
+
+    private boolean isImage(File file) {
+        try {
+            Image image = ImageIO.read(file);
+            return image != null;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     public void deleteOldDocumentsOfSQL(Date date) {

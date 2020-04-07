@@ -1,5 +1,6 @@
 package fulltext.print.demo.controller;
 
+import fulltext.print.demo.service.DocumentService;
 import fulltext.print.demo.utils.UploadAndIndexingFiles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +16,9 @@ public class GeneralController {
 
     @Autowired
     private UploadAndIndexingFiles uploadAndIndexingFiles;
+
+    @Autowired
+    private DocumentService documentService;
 
     @RequestMapping("/uploadAndIndexingFiles")
     public ModelAndView uploadAndIndexingFilesExecute() throws IOException {
@@ -35,5 +39,11 @@ public class GeneralController {
         mv.addObject("time500000", uploadAndIndexingFiles.getPerformanceMap().get("500000"));
         mv.addObject("timeTotal", uploadAndIndexingFiles.getPerformanceMap().get("All"));
         return mv;
+    }
+
+    @RequestMapping("/deleteAll")
+    public ModelAndView deleteAll() {
+        documentService.deleteAll();
+        return new ModelAndView("redirect:/search");
     }
 }

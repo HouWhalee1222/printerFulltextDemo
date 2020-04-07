@@ -27,9 +27,6 @@ public class UploadAndIndexingFiles {
     @Autowired
     private DocumentService documentService;
 
-    @Value("${spring.data.solr.commitRate}")
-    private int commitRate;
-
     private static int totalDocs = 0;
     private static AtomicInteger currentDocsIndexed = new AtomicInteger(0);
     private static long startTime = System.currentTimeMillis();
@@ -39,6 +36,8 @@ public class UploadAndIndexingFiles {
 
     public void insertDocument(String filePath) throws IOException {
         // Calculate the total number of docs need to index
+        currentDocsIndexed.getAndSet(0);
+        totalDocs = 0;
         getTotalDocs(filePath);
 
         // Initialize the
@@ -61,32 +60,10 @@ public class UploadAndIndexingFiles {
         File[] tempList = file.listFiles();
         for (int i = 0; i < tempList.length; i++) {
             if (tempList[i].isFile()) {
-                File filename = new File(String.valueOf(tempList[i]));
-                InputStreamReader reader = new InputStreamReader(new FileInputStream(filename));
-                BufferedReader br = new BufferedReader(reader);
-
-                String content = "";
-                String line = br.readLine();
-                while (line != null) {
-                    content = content + line;
-                    line = br.readLine();
+                boolean success = documentService.insertFile(tempList[i]);
+                if (success) {
+                    increaseCurrentDocIndexed();
                 }
-
-                Document document = new Document();
-                document.setId(UUID.randomUUID().toString());
-                document.setAuthor("author "+i);
-                document.setTitle(tempList[i].getParent() + "-" + tempList[i].getName());
-                document.setContent(content);
-                document.setPrintTime(new Date());
-                document.setUrl(String.valueOf(tempList[i]));
-                documentService.insertDocument(document);
-                increaseCurrentDocIndexed();
-                br.close();
-
-                if (i % commitRate == 0) { // Commit every 100 documents
-                    documentService.commitToSolr();
-                }
-
             } else if (tempList[i].isDirectory()) {
                 UploadAndIndexingFiles uploadAndIndexingFilesProxy = SpringUtil.getBean(UploadAndIndexingFiles.class);
                 results.add(uploadAndIndexingFilesProxy.insertDocumentHelper(tempList[i].toString()));
