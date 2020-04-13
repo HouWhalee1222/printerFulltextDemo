@@ -15,14 +15,16 @@
                 <input type="submit" value="search!"/>
             </form>
         </div>
-<!--        <div style="float: left">-->
-<!--            <b>&nbsp rows: &nbsp</b>-->
-<!--            <select>-->
-<!--                <option><a th:href="'/search?q='+${query}+'&page='+${page}+'&rows=1'">1</a></option>-->
-<!--                <option><a th:href="'/search?q='+${query}+'&page='+${page}+'&rows=10'">10</a></option>-->
-<!--                <option><a th:href="'/search?q='+${query}+'&page='+${page}+'&rows=15'">15</a></option>-->
-<!--            </select>-->
-<!--        </div>-->
+
+        <div style="float: left; margin-left: 10px">
+            <div style="float: left">
+                <form action="/upload" method="post" enctype="multipart/form-data">
+                    <input type="file" name="file">
+                    <input type="submit" value="upload">
+                </form>
+            </div>
+        </div>
+
         <div style="float: right; margin-top: 0; margin-bottom: 0">
             <b style="font-size: 13px">Log in as <b th:inline="text" style="font-size: 13px; color: red">[[${session.loginUser}]]</b></b>
         </div>

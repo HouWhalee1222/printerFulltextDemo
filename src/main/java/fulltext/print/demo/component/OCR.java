@@ -4,6 +4,7 @@ import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -14,12 +15,14 @@ public class OCR {
     @Value("${spring.ocr.datapath}")
     private String dataPath;
 
-    public String doOCRForOneFile(String filePath) {
+    @Async
+    public String doOCRForOnePageFile(String filePath) {
         File file = new File(filePath);
-        return doOCRForOneFile(file);
+        return doOCRForOnePageFile(file);
     }
 
-    public String doOCRForOneFile(File file) {
+    @Async
+    public String doOCRForOnePageFile(File file) {
         ITesseract iTesseract = new Tesseract();
         iTesseract.setDatapath(dataPath);
 
@@ -31,6 +34,4 @@ public class OCR {
         }
         return result.substring(1);
     }
-
-
 }

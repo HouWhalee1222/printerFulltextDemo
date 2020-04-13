@@ -23,6 +23,7 @@ public class ViewController {
         mv.addObject("author", document.getAuthor());
         mv.addObject("printTime", document.getPrintTime());
         mv.addObject("url", document.getUrl());
+        mv.addObject("content", document.getContent());
 
         return mv;
     }

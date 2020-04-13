@@ -9,6 +9,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.jws.WebParam;
 import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/util")
@@ -30,14 +31,15 @@ public class GeneralController {
     @RequestMapping("/uploadAndIndexingFiles/status")
     public ModelAndView getIndexingStatus() {
         ModelAndView mv = new ModelAndView("UploadAndIndexingFilesStatus");
+        Map<String, Double> performanceMap = uploadAndIndexingFiles.getPerformanceMap();
         mv.addObject("currentIndexed", uploadAndIndexingFiles.getCurrentDocIndexed());
         mv.addObject("totalDoc", uploadAndIndexingFiles.getTotalDoc());
-        mv.addObject("time10000", uploadAndIndexingFiles.getPerformanceMap().get("10000"));
-        mv.addObject("time50000", uploadAndIndexingFiles.getPerformanceMap().get("50000"));
-        mv.addObject("time100000", uploadAndIndexingFiles.getPerformanceMap().get("100000"));
-        mv.addObject("time200000", uploadAndIndexingFiles.getPerformanceMap().get("200000"));
-        mv.addObject("time500000", uploadAndIndexingFiles.getPerformanceMap().get("500000"));
-        mv.addObject("timeTotal", uploadAndIndexingFiles.getPerformanceMap().get("All"));
+        mv.addObject("time10000", performanceMap.get("10000"));
+        mv.addObject("time50000", performanceMap.get("50000"));
+        mv.addObject("time100000", performanceMap.get("100000"));
+        mv.addObject("time200000", performanceMap.get("200000"));
+        mv.addObject("time500000", performanceMap.get("500000"));
+        mv.addObject("timeTotal", performanceMap.get("All"));
         return mv;
     }
 

@@ -2,10 +2,10 @@ package fulltext.print.demo.service;
 
 import fulltext.print.demo.bean.Document;
 import fulltext.print.demo.bean.SearchResult;
-import fulltext.print.demo.component.OCR;
-import fulltext.print.demo.dao.DocumentDao;
-import fulltext.print.demo.dao.SolrDao;
-import fulltext.print.demo.dao.SolrDaoUsingSolrTemplate;
+import fulltext.print.demo.dao.document.DocumentDao;
+import fulltext.print.demo.dao.document.sql.MySQLDocumentDao;
+import fulltext.print.demo.dao.document.solr.SolrDaoUsingCrudRepository;
+import fulltext.print.demo.dao.document.solr.SolrDaoUsingSolrTemplate;
 import lombok.extern.log4j.Log4j2;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -14,6 +14,8 @@ import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ import java.awt.*;
 import java.io.*;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.Future;
 
 @Log4j2
 @Service
@@ -30,15 +33,10 @@ public class DocumentService {
     @Autowired
     private SolrClient solrClient;
     @Autowired
-    private SolrDao solrDao;
-    @Autowired
-    private SolrDaoUsingSolrTemplate solrDaoUsingSolrTemplate;
-
-    @Autowired
     private DocumentDao documentDao;
 
     @Autowired
-    private OCR ocr;
+    private OCRService ocrService;
 
     @Value("${spring.data.solr.core}")
     private String collection;
@@ -118,49 +116,31 @@ public class DocumentService {
         return searchResult;
     }
 
-    public List<Document> selectAll() {
-        return documentDao.findAll();
-    }
-
-    public Document selectDocumentById(String id) {
-        return documentDao.findDocumentById(id);
-    }
-
-    @Transactional
     public void insertDocument(Document document) {
-        documentDao.insertOneDocument(document);
-        solrDaoUsingSolrTemplate.addDocumentWithOutCommit(document);
-        System.out.println(Thread.currentThread().getName() + ": Insert succeed for document " + document.getUrl());
-        //log.info(Thread.currentThread().getName() + ": Insert succeed for document " + document.getUrl());
-        //
+        documentDao.insertDocument(document);
     }
 
-    @Transactional
     public void deleteOldDocuments() {
-        log.info("Start deleting old documents");
+        log.info("Document Service: Start deleting old documents");
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
         calendar.add(Calendar.DATE, -keepDays);
         Date deleteTime = calendar.getTime();
-
-        deleteOldDocumentOfSolr(deleteTime);
-        deleteOldDocumentsOfSQL(deleteTime);
-        log.info("Delete succeed!");
+        documentDao.deleteDocumentBeforeTime(deleteTime);
+        log.info("Document Service: Delete succeed!");
     }
 
-    @Transactional
     public void deleteAll() {
-        log.info("Start deleting all documents");
+        log.info("Document Service: Start deleting all documents");
         Date deleteTime = new Date();
-        deleteOldDocumentsOfSQL(deleteTime);
-        deleteOldDocumentOfSolr(deleteTime);
-        log.info("Delete succeed!");
+        documentDao.deleteDocumentBeforeTime(deleteTime);
+        log.info("Document Service: Delete succeed!");
     }
 
     public boolean insertFile(File file) throws IOException {
         String content = "";
         if (isImage(file)) {
-            content = ocr.doOCRForOneFile(file);
+            content = ocrService.doOCRforOneFile(file);
         } else {
             File filename = new File(String.valueOf(file));
             InputStreamReader reader = new InputStreamReader(new FileInputStream(filename));
@@ -181,13 +161,28 @@ public class DocumentService {
         document.setContent(content);
         document.setPrintTime(new Date());
         document.setUrl(file.getPath());
+
         insertDocument(document);
+
         return true;
     }
 
     public boolean insertFile(String filePath) throws IOException {
         File file = new File(filePath);
         return insertFile(file);
+    }
+
+    @Async
+    public Future<String> insertFileAsync(String filePath) throws IOException {
+        File file = new File(filePath);
+        insertFile(file);
+        return new AsyncResult<>("Complete");
+    }
+
+    @Async
+    public Future<String> insertFileAsync(File file) throws IOException {
+        insertFile(file);
+        return new AsyncResult<>("Complete");
     }
 
     private boolean isImage(File file) {
@@ -199,17 +194,18 @@ public class DocumentService {
         }
     }
 
-    public void deleteOldDocumentsOfSQL(Date date) {
-        documentDao.deleteDocumentByPrintTimeBefore(date);
+    public List<Document> selectAll() {
+        return documentDao.findAll();
     }
 
-    public void deleteOldDocumentOfSolr(Date date) {
-        solrDao.deleteDocumentByPrintTimeBefore(date);
+    public Document selectDocumentById(String id) {
+        return documentDao.findDocumentById(id);
     }
 
     public void commitToSolr() {
-        solrDaoUsingSolrTemplate.commit();
+        documentDao.commitSolr();
     }
+
 
 
 }

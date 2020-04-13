@@ -18,7 +18,7 @@ public class DocumentSearchController {
     @RequestMapping("/search")
     public ModelAndView search(@RequestParam(name = "q", defaultValue = "") String queryString,
                                @RequestParam(defaultValue = "0") Integer page,
-                               @RequestParam(defaultValue = "10") Integer rows) throws Exception {
+                               @RequestParam(defaultValue = "15") Integer rows) throws Exception {
         page = page >= 0 ? page : 0;
         rows = rows >= 15 ? rows : 15;
 

@@ -1,4 +1,4 @@
-package fulltext.print.demo.dao;
+package fulltext.print.demo.dao.document.solr;
 
 import fulltext.print.demo.bean.Document;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,20 +17,21 @@ public class SolrDaoUsingSolrTemplate {
     @Value("${spring.data.solr.commitRate}")
     private int commitRate;
 
-    private AtomicInteger unCommittedDocuments = new AtomicInteger(0);
-
     @Value("${spring.data.solr.core}")
     private String collection;
 
+    private AtomicInteger unCommittedDocuments = new AtomicInteger(0);
+
     public void addDocumentWithOutCommit(Document document) {
         solrTemplate.saveBean(collection, document);
-
+        unCommittedDocuments.incrementAndGet();
         if (unCommittedDocuments.incrementAndGet() % commitRate == 0) {
             commit();
         }
     }
 
     public void commit() {
+        unCommittedDocuments.getAndSet(0);
         solrTemplate.commit(collection);
     }
 }

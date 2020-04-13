@@ -10,10 +10,7 @@ import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutionException;
@@ -28,17 +25,18 @@ public class UploadAndIndexingFiles {
     private DocumentService documentService;
 
     private static int totalDocs = 0;
-    private static AtomicInteger currentDocsIndexed = new AtomicInteger(0);
     private static long startTime = System.currentTimeMillis();
+    private static long endTime = System.currentTimeMillis();
 
-    private Collection<Future<String>> results = new ConcurrentLinkedDeque<>(); //Bug Here
     private ConcurrentHashMap<String, Double> performanceMap = new ConcurrentHashMap<>();
+    private Collection<Future<String>> results = new ConcurrentLinkedDeque<>();
 
     public void insertDocument(String filePath) throws IOException {
         // Calculate the total number of docs need to index
-        currentDocsIndexed.getAndSet(0);
         totalDocs = 0;
-        getTotalDocs(filePath);
+        results.clear();
+        List<File> allFiles = new LinkedList<>();
+        collectTotalDocs(filePath, allFiles);
 
         // Initialize the
         performanceMap.put("10000", -1.0);
@@ -49,46 +47,38 @@ public class UploadAndIndexingFiles {
         performanceMap.put("All", -1.0);
 
         startTime = System.currentTimeMillis();
-        // Index all the files in parallel
-        UploadAndIndexingFiles uploadAndIndexingFilesProxy = SpringUtil.getBean(UploadAndIndexingFiles.class);
-        results.add(uploadAndIndexingFilesProxy.insertDocumentHelper(filePath));
+        endTime = System.currentTimeMillis();
+        insertDocumentHelper(allFiles);
     }
 
-    @Async
-    public Future<String> insertDocumentHelper(String path) throws IOException {
-        File file = new File(path);
-        File[] tempList = file.listFiles();
-        for (int i = 0; i < tempList.length; i++) {
-            if (tempList[i].isFile()) {
-                boolean success = documentService.insertFile(tempList[i]);
-                if (success) {
-                    increaseCurrentDocIndexed();
-                }
-            } else if (tempList[i].isDirectory()) {
-                UploadAndIndexingFiles uploadAndIndexingFilesProxy = SpringUtil.getBean(UploadAndIndexingFiles.class);
-                results.add(uploadAndIndexingFilesProxy.insertDocumentHelper(tempList[i].toString()));
-            }
+    public void insertDocumentHelper(List<File> files) throws IOException {
+        for (File file : files) {
+            Future<String> currentResult = documentService.insertFileAsync(file);
+            results.add(currentResult);
         }
-        return new AsyncResult<>("Complete");
     }
 
-    private static void getTotalDocs(String filePath) {
+
+    private static void collectTotalDocs(String filePath, List<File> result) {
         File file = new File(filePath);
         File[] tempList = file.listFiles();
         for (int i = 0; i < tempList.length; i++) {
             if (tempList[i].isFile()) {
                 totalDocs += 1;
+                result.add(tempList[i]);
             } else if (tempList[i].isDirectory()) {
-               getTotalDocs(tempList[i].toString());
+                collectTotalDocs(tempList[i].toString(), result);
             }
         }
     }
 
-    private void increaseCurrentDocIndexed() {
-        int currentValue = currentDocsIndexed.getAndIncrement();
-        if (currentValue == totalDocs) {
-            performanceMap.replace("All", (System.currentTimeMillis() - startTime) / 1000.0);
+    public ConcurrentHashMap<String, Double> getPerformanceMap() {
+        int currentValue = getCurrentDocIndexed();
+        log.info("UploadAndIndexingFiles: " + currentValue + "files are successfully indexed.");
+        if (currentValue != totalDocs) {
+            endTime = System.currentTimeMillis();
         }
+        performanceMap.replace("All", (endTime - startTime) / 1000.0);
         switch (currentValue) {
             case 10000:
                 performanceMap.replace("10000", (System.currentTimeMillis() - startTime) / 1000.0);
@@ -108,17 +98,20 @@ public class UploadAndIndexingFiles {
             default:
                 break;
         }
+        return performanceMap;
+    }
+
+    public Integer getCurrentDocIndexed() {
+        int result = 0;
+        for (Future<String> r : results) {
+            if (r.isDone()) {
+                result += 1;
+            }
+        }
+        return result;
     }
 
     public Integer getTotalDoc() {
         return totalDocs;
-    }
-
-    public Integer getCurrentDocIndexed() {
-        return currentDocsIndexed.get();
-    }
-
-    public ConcurrentHashMap<String, Double> getPerformanceMap() {
-        return performanceMap;
     }
 }
