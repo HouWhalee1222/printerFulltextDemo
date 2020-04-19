@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Lazy(false)
 public class SpringUtil implements ApplicationContextAware {
+    // used for some operation to get springboot related objects
 
     private static ApplicationContext applicationContext;
 

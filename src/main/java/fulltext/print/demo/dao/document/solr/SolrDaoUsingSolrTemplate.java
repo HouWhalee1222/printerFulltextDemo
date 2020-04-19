@@ -25,12 +25,14 @@ public class SolrDaoUsingSolrTemplate {
     public void addDocumentWithOutCommit(Document document) {
         solrTemplate.saveBean(collection, document);
         unCommittedDocuments.incrementAndGet();
+        // commit the document when un-committed file reach the commit rate
         if (unCommittedDocuments.incrementAndGet() % commitRate == 0) {
             commit();
         }
     }
 
     public void commit() {
+        // commit all documents to the solr server
         unCommittedDocuments.getAndSet(0);
         solrTemplate.commit(collection);
     }

@@ -8,6 +8,7 @@ import java.util.List;
 
 @Mapper
 public interface MySQLDocumentDao {
+    // sample persistent layer Dao, we use MySQL here
 
     @Select("SELECT * FROM printerData WHERE id = #{id}")
     Document findDocumentById(@Param("id") String id);

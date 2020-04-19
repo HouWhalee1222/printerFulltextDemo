@@ -16,6 +16,7 @@ public class Scheduler {
 
     @Scheduled(cron = "${spring.scheduler.cleanOldDocument.cron}")
     public void deleteOldDocument() {
+        // delete old document when its too old
         log.info("Scheduled job deleteOldDocument starts");
         documentService.deleteOldDocuments();
         log.info("Job deleteOldDocument finished successfully");

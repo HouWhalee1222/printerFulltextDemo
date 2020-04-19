@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.List;
 
 public class SearchResult implements Serializable {
-
     // search result
     private List<Document> documentList;
 

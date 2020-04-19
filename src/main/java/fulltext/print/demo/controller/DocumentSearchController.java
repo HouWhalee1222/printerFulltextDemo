@@ -11,6 +11,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 @RestController
 public class DocumentSearchController {
+    // controller for searching
 
     @Autowired
     private DocumentService documentService;

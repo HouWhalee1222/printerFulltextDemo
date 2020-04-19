@@ -1,7 +1,7 @@
 package fulltext.print.demo.bean;
 
 public class User {
-
+    // Sample user class
     private String id;
 
     private String username;

@@ -8,6 +8,7 @@ import java.util.Date;
 
 @Repository
 public class SolrDao {
+    // Unified Dao for Solr
 
     @Autowired
     private SolrDaoUsingSolrTemplate solrDaoUsingSolrTemplate;

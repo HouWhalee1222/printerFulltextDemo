@@ -10,7 +10,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 @RestController
 public class ViewController {
-
+    // controller for view the content of the document briefly
     @Autowired
     private DocumentService documentService;
 

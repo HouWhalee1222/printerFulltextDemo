@@ -23,6 +23,8 @@ public class LoginController {
     public ModelAndView login(@RequestParam("username") String username,
                               @RequestParam("password") String password, HttpSession session) {
         ModelAndView mv = new ModelAndView();
+
+        // check the username and the password
         if (userService.login(username, password)) {
             mv.setViewName("redirect:search");
             session.setAttribute("loginUser", username);

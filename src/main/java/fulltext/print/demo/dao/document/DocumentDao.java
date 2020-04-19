@@ -14,7 +14,7 @@ import java.util.List;
 @Log4j2
 @Repository
 public class DocumentDao {
-
+    // Unified Dao for document, keep the data in SQL and Solr consistent
     @Autowired
     private SolrDao solrDao;
 
@@ -23,6 +23,7 @@ public class DocumentDao {
 
     @Transactional
     public void insertDocument(Document document) {
+        // Insert the document to Solr as well as SQL database
         mySQLDocumentDao.insertOneDocument(document);
         solrDao.addDocument(document);
         System.out.println(Thread.currentThread().getName() + ": Insert succeed for document " + document.getUrl());
@@ -30,6 +31,7 @@ public class DocumentDao {
 
     @Transactional
     public void deleteDocumentBeforeTime(Date date) {
+        // Delete all the document form Solr and SQL database before date
         log.info("DocumentDao: Start deleting document before: " + date.toString());
         mySQLDocumentDao.deleteDocumentByPrintTimeBefore(date);
         solrDao.deleteOldDocumentBeforeDate(date);
@@ -37,6 +39,7 @@ public class DocumentDao {
     }
 
     public List<Document> findAll() {
+        // Select all document from SQL database
         log.info("DocumentDao: Starting finding all document");
         List<Document> result = mySQLDocumentDao.findAll();
         log.info("DocumentDao: findAll() succeed!");

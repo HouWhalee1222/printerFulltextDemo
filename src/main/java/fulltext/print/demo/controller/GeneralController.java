@@ -10,10 +10,12 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.jws.WebParam;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/util")
 public class GeneralController {
+    // controller for some utilities like upload new files
 
     @Autowired
     private UploadAndIndexingFiles uploadAndIndexingFiles;
@@ -22,7 +24,7 @@ public class GeneralController {
     private DocumentService documentService;
 
     @RequestMapping("/uploadAndIndexingFiles")
-    public ModelAndView uploadAndIndexingFilesExecute() throws IOException {
+    public ModelAndView uploadAndIndexingFilesExecute() throws IOException, ExecutionException, InterruptedException {
         String filesPath = "E:\\printerData";
         uploadAndIndexingFiles.insertDocument(filesPath);
         return new ModelAndView("redirect:/util/uploadAndIndexingFiles/status");

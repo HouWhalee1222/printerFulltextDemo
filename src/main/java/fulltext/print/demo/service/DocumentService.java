@@ -24,6 +24,7 @@ import java.awt.*;
 import java.io.*;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 @Log4j2
@@ -32,6 +33,7 @@ public class DocumentService {
 
     @Autowired
     private SolrClient solrClient;
+
     @Autowired
     private DocumentDao documentDao;
 
@@ -137,10 +139,10 @@ public class DocumentService {
         log.info("Document Service: Delete succeed!");
     }
 
-    public boolean insertFile(File file) throws IOException {
+    public boolean insertFile(File file) throws IOException, ExecutionException, InterruptedException {
         String content = "";
         if (isImage(file)) {
-            content = ocrService.doOCRforOneFile(file);
+            content = ocrService.doOCRForOneFile(file);
         } else {
             File filename = new File(String.valueOf(file));
             InputStreamReader reader = new InputStreamReader(new FileInputStream(filename));
@@ -167,25 +169,34 @@ public class DocumentService {
         return true;
     }
 
-    public boolean insertFile(String filePath) throws IOException {
+    public boolean insertFile(String filePath) throws IOException, ExecutionException, InterruptedException {
         File file = new File(filePath);
         return insertFile(file);
     }
 
     @Async
-    public Future<String> insertFileAsync(String filePath) throws IOException {
+    public Future<String> insertFileAsync(String filePath) throws IOException, ExecutionException, InterruptedException {
         File file = new File(filePath);
-        insertFile(file);
-        return new AsyncResult<>("Complete");
+        boolean result = insertFile(file);
+        if (result) {
+            return new AsyncResult<>("Complete");
+        } else {
+            return new AsyncResult<>("Failed");
+        }
     }
 
     @Async
-    public Future<String> insertFileAsync(File file) throws IOException {
-        insertFile(file);
-        return new AsyncResult<>("Complete");
+    public Future<String> insertFileAsync(File file) throws IOException, ExecutionException, InterruptedException {
+        boolean result = insertFile(file);
+        if (result) {
+            return new AsyncResult<>("Complete");
+        } else {
+            return new AsyncResult<>("Failed");
+        }
     }
 
     private boolean isImage(File file) {
+        // Judge whether the file is image
         try {
             Image image = ImageIO.read(file);
             return image != null;

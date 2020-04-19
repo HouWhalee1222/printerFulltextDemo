@@ -10,6 +10,7 @@ import java.util.Date;
 
 @SolrDocument(collection = "printerDemo")
 public class Document implements Serializable {
+    // Sample document class
 
     @Id
     @Field

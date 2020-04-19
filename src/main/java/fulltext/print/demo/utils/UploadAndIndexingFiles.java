@@ -31,7 +31,7 @@ public class UploadAndIndexingFiles {
     private ConcurrentHashMap<String, Double> performanceMap = new ConcurrentHashMap<>();
     private Collection<Future<String>> results = new ConcurrentLinkedDeque<>();
 
-    public void insertDocument(String filePath) throws IOException {
+    public void insertDocument(String filePath) throws IOException, ExecutionException, InterruptedException {
         // Calculate the total number of docs need to index
         totalDocs = 0;
         results.clear();
@@ -51,7 +51,7 @@ public class UploadAndIndexingFiles {
         insertDocumentHelper(allFiles);
     }
 
-    public void insertDocumentHelper(List<File> files) throws IOException {
+    public void insertDocumentHelper(List<File> files) throws IOException, ExecutionException, InterruptedException {
         for (File file : files) {
             Future<String> currentResult = documentService.insertFileAsync(file);
             results.add(currentResult);
